@@ -1,0 +1,235 @@
+<?php
+session_start();
+require('db.php');
+
+$path = $_SESSION['path'];
+
+
+if(!isset($_SESSION['lat_current']) && isset($_SESSION['lon_current'])){
+$_SESSION['lat_current'] = 0;
+$_SESSION['lon_current'] = 0;
+$_SESSION['IDX'] = 0;
+}
+    
+    $idx = $_SESSION['IDX'];
+    $code = $path[$idx];
+    $q = mysql_query("select lat,lon from route where code='$code'");
+    $r = mysql_fetch_array($q);
+    $_SESSION['lat_current']=$r['lat'];
+    $_SESSION['lon_current']=$r['lon'];
+    
+//    echo $path[0];
+//    echo $r['lat'];
+//    echo $r['lon'];
+
+
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>KONFOII - INDISCHE</title>
+   
+<script type="text/javascript">
+
+var t = setInterval(function(){get_chat_msg()},5000);
+
+
+//
+// General Ajax Call
+//
+      
+var oxmlHttp;
+var oxmlHttpSend;
+      
+function get_chat_msg()
+{
+
+    if(typeof XMLHttpRequest != "undefined")
+    {
+        oxmlHttp = new XMLHttpRequest();
+    }
+    else if (window.ActiveXObject)
+    {
+       oxmlHttp = new ActiveXObject("Microsoft.XMLHttp");
+    }
+    if(oxmlHttp == null)
+    {
+        alert("Browser does not support XML Http Request");
+       return;
+    }
+    
+    oxmlHttp.onreadystatechange = get_chat_msg_result;
+    oxmlHttp.open("GET","chat_recv_ajax.php",true);
+    oxmlHttp.send(null);
+}
+     
+function get_chat_msg_result()
+{
+    if(oxmlHttp.readyState==4 || oxmlHttp.readyState=="complete")
+    {
+        if (document.getElementById("DIV_CHAT") != null)
+        {
+            document.getElementById("DIV_CHAT").innerHTML =  oxmlHttp.responseText;
+            oxmlHttp = null;
+        }
+        var scrollDiv = document.getElementById("DIV_CHAT");
+        scrollDiv.scrollTop = scrollDiv.scrollHeight;
+    }
+}
+
+      
+function set_chat_msg()
+{
+
+    if(typeof XMLHttpRequest != "undefined")
+    {
+        oxmlHttpSend = new XMLHttpRequest();
+    }
+    else if (window.ActiveXObject)
+    {
+       oxmlHttpSend = new ActiveXObject("Microsoft.XMLHttp");
+    }
+    if(oxmlHttpSend == null)
+    {
+       alert("Browser does not support XML Http Request");
+       return;
+    }
+    
+    var url = "chat_send_ajax.php";
+    var strname="noname";
+    var strmsg="";
+    var lat = 0;
+    var long = 0;
+    
+    if (document.getElementById("txtname") != null)
+    {
+        strname = document.getElementById("txtname").value;
+        document.getElementById("txtname").readOnly=true;
+    }
+    if (document.getElementById("txtmsg") != null)
+    {
+        strmsg = document.getElementById("txtmsg").value;
+        document.getElementById("txtmsg").value = "this is message";
+    }
+    
+    if (document.getElementById("lat_ind") != null)
+    {
+        lat = parseFloat(document.getElementById("lat_ind").value);
+    }
+    
+    if (document.getElementById("lon_ind") != null)
+    {
+        lon = parseFloat(document.getElementById("lon_ind").value);
+    }
+    
+//    lat += 0.0015;
+//    long += 0.0025;
+    
+    url += "?name=" + strname + "&msg=" + strmsg + "&lat=" + lat + "&long=" + lon ;
+    oxmlHttpSend.open("GET",url,true);
+    oxmlHttpSend.send(null);
+}
+    
+function lat_dec_c(){
+    var lat_idx=0;
+    if (document.getElementById("lat_ind") != null)
+    {
+        lat_idx = parseFloat(document.getElementById("lat_ind").value);
+        lat_idx -= 0.001;        
+        document.getElementById("lat_ind").value = lat_idx;
+    }
+}
+    
+function lat_inc_c(){
+    var lat_idx=0;
+    if (document.getElementById("lat_ind") != null)
+    {
+        lat_idx = parseFloat(document.getElementById("lat_ind").value);
+        lat_idx += 0.001;
+        document.getElementById("lat_ind").value = lat_idx;
+    }
+}
+    
+function lon_dec_c(){
+    var lon_idx=0;
+    if (document.getElementById("lon_ind") != null)
+    {
+        lon_idx = parseFloat(document.getElementById("lon_ind").value);
+        lon_idx -= 0.001;        
+        document.getElementById("lon_ind").value = lon_idx;
+    }
+}
+    
+function lon_inc_c(){
+    var lon_idx=0;
+    if (document.getElementById("lon_ind") != null)
+    {
+        lon_idx = parseFloat(document.getElementById("lon_ind").value);
+        lon_idx += 0.001;        
+        document.getElementById("lon_ind").value = lon_idx;
+    }
+}
+
+</script>
+
+</head>
+<body>
+    &nbsp;
+    <div>
+        <table style="width:100%; height:100%">
+            <tr>
+                <td colspan="2">TRACK</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <table>
+                        <tr>                            
+                            <td style="width: 100px">
+                                </td>
+                            <td style="width: 100px">&nbsp;</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>            
+            <tr>
+                <td>
+                    <input id="txtname" style="width: 0px; height: 0px" value="I am" type="text" name="name" maxlength="15" />
+                    <input id="txtmsg" style="width: 0px; height: 0px" type="text" value="kirim" name="msg" />
+<!--                    <input id="Submit2" style="font-family: verdana, arial" type="button" value="Send" onclick="set_chat_msg()"/>-->
+                    <input id="Submit2" style="width:0px; height:0px;font-family: verdana, arial" type="button" value="Send" />
+                    <br />
+                    <input type="text" id="lat_ind" value="<?=$_SESSION['lat_current']?>" />
+                    <input type="button" id="lat_dec" value="-" onclick="lat_dec_c()" />
+                    <input type="button" id="lat_inc" value="+" onclick="lat_inc_c()" />
+                    <br />
+                                                            
+                    <input type="text" id="lon_ind" value="<?=$_SESSION['lon_current']?>" />
+                    <input type="button" id="lon_dec" value="-" onclick="lon_dec_c()" />
+                    <input type="button" id="lon_inc" value="+" onclick="lon_inc_c()" />                    
+                    
+                </td>
+                <td>
+                    </td>
+            </tr>            
+        </table>
+    </div>
+    
+    
+    <p id="demo"></p>
+
+<button style="width:0px; height:0px;" onclick="clearInterval(myVar)">Stop time</button>
+
+<script>
+var myLoc_lat = setInterval(function () {lat_inc_c()}, 2000);
+var myLoc_lon = setInterval(function () {lon_inc_c()}, 2000);
+    
+    
+var myVar = setInterval(function () {set_chat_msg()}, 2000);
+ function myTimer() {
+    var d = new Date();
+    document.getElementById("demo").innerHTML = d.toLocaleTimeString();
+}
+</script>
+    
+</body>
+</html>
